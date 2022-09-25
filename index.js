@@ -16,7 +16,15 @@ const contextoRenderingDir = canvasDir.getContext("2d");
 const containerDosToggles = document.getElementById("container");
 
 
-const criaToggle = nomeDoToggle => {
+/**
+ * @param {Array} array
+ * @param {String} elemento
+ */
+ const removeDoArray = (array, elemento) => {
+	return array.splice(array.indexOf(elemento), 1);
+}
+
+const criaToggle = (nomeDoToggle, eventoDoToggle) => {
 	const container = document.createElement("div");
 	container.classList.add("esse-lixo");
 
@@ -30,6 +38,7 @@ const criaToggle = nomeDoToggle => {
 	
 	const input = document.createElement("input");
 	input.type = "checkbox";
+	input.addEventListener("change", () => eventoDoToggle(input.checked));
 
 	const span = document.createElement("span");
 	span.classList.add("slider");
@@ -45,24 +54,27 @@ const criaToggle = nomeDoToggle => {
 	return container;
 }
 
-
 const filtrosPorChave = {
 	"Imagem Invertida": () => mostraImagemInvertida(contextoRenderingDir),
 	"Escala de Cinza":  () => mostraImagemGrayScale(contextoRenderingDir),
-	"Escala 0":  () => mostraImagemGrayScale(contextoRenderingDir),
-	"Escala 1":  () => mostraImagemGrayScale(contextoRenderingDir),
-	"Escala 2":  () => mostraImagemGrayScale(contextoRenderingDir),
-	"Escala 3":  () => mostraImagemGrayScale(contextoRenderingDir),
 }
 
-// const filtrosAplicados = []
+const filtrosParaAplicar = []
 
-for (const chave in filtrosPorChave) {
-	const toggle = criaToggle(chave);
-	containerDosToggles.appendChild(toggle);
-	
-	// const elemento = document.createElement("toggle")
-	// container.appendChild();
+const aplicaOsFiltrosParaAplicar = () => {
+	mostraOriginal(contextoRenderingDir);
+
+	for (const chaveFiltro of filtrosParaAplicar) {
+		const aplicaFiltro = filtrosPorChave[chaveFiltro];
+		aplicaFiltro(contextoRenderingDir);
+	}
+}
+
+const togglar = (chave, seraQueOUsuarioTogglou) => {
+	if (seraQueOUsuarioTogglou) filtrosParaAplicar.push(chave);
+	else removeDoArray(filtrosParaAplicar, chave);
+
+	aplicaOsFiltrosParaAplicar();
 }
 
 
@@ -118,6 +130,11 @@ imgOriginal.onload = () => {
 	
 	mostraOriginal(contextoRenderingEsq);
 	mostraOriginal(contextoRenderingDir);
-
-	mostraImagemInvertida(contextoRenderingDir);
 };
+
+for (const chave in filtrosPorChave) {
+	const eventoDoToggle = seraQueOUsuarioTogglou => togglar(chave, seraQueOUsuarioTogglou);
+	
+	const toggle = criaToggle(chave, eventoDoToggle);
+	containerDosToggles.appendChild(toggle);
+}
