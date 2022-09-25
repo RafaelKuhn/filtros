@@ -61,15 +61,10 @@ const criaToggle = (nomeDoToggle, eventoDoToggle) => {
 const ativaOToggle = chaveDoToggle => {
 	const toggle = inputesDoTogglePorChave[chaveDoToggle];
 	toggle.checked = true;
-	console.log("achei o toggle " + toggle);
 	const e = new Event("change");
 	toggle.dispatchEvent(e);
 }
 
-const filtrosPorChave = {
-	"Imagem Invertida": () => mostraImagemInvertida(contextoRenderingDir),
-	"Escala de Cinza":  () => mostraImagemGrayScale(contextoRenderingDir),
-}
 
 const filtrosParaAplicar = []
 
@@ -93,6 +88,12 @@ const togglar = (chave, seraQueOUsuarioTogglou) => {
 // ################################################
 // ################### FILTROS ####################
 // ################################################
+
+const filtrosPorChave = {
+	"Imagem Invertida": () => mostraImagemInvertida(contextoRenderingDir),
+	"Escala de Cinza":  () => mostraImagemGrayScale(contextoRenderingDir),
+	"Brilho":  () => mostraImagemBrilho(contextoRenderingDir),
+}
 
 /** @param {CanvasRenderingContext2D} contextoDeRender */
 const mostraOriginal = (contextoDeRender) => {
@@ -128,6 +129,22 @@ const mostraImagemGrayScale = (contextoDeRender) => {
 	contextoDeRender.putImageData(imageData, 0, 0);
 }
 
+/** @param {CanvasRenderingContext2D} contextoDeRender */
+const mostraImagemBrilho = (contextoDeRender) => {
+	const imageData = contextoDeRender.getImageData(0, 0, canvasEsq.width, canvasEsq.height);
+	const data = imageData.data;
+
+	for (let i = 0; i < data.length; i += 4) {
+		data[i]     = data[i] + 100;
+		data[i + 1] = data[i + 1] + 100;
+		data[i + 2] = data[i + 2] + 100;
+		// data[i + 3] = 255;
+	}
+
+	contextoDeRender.putImageData(imageData, 0, 0);
+}
+
+
 
 
 // ################################################
@@ -150,14 +167,6 @@ imgOriginal.onload = () => {
 		containerDosToggles.appendChild(toggle);
 	}
 	
-	// for (const chaveDoInput in inputesDoTogglePorChave) {
-	// 	const inpute = inputesDoTogglePorChave[chaveDoInput];
-	// 	inpute.checked = true;
-		
-	// 	const e = new Event("change");
-	// 	inpute.dispatchEvent(e);
-	// }
-
 	ativaOToggle("Imagem Invertida")
 
 };
