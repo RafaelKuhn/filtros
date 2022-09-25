@@ -15,6 +15,7 @@ const contextoRenderingDir = canvasDir.getContext("2d");
 
 const containerDosToggles = document.getElementById("container");
 
+const inputesDoTogglePorChave = { }
 
 /**
  * @param {Array} array
@@ -38,7 +39,10 @@ const criaToggle = (nomeDoToggle, eventoDoToggle) => {
 	
 	const input = document.createElement("input");
 	input.type = "checkbox";
+	input.classList.add("inputao")
 	input.addEventListener("change", () => eventoDoToggle(input.checked));
+
+	inputesDoTogglePorChave[nomeDoToggle] = input;
 
 	const span = document.createElement("span");
 	span.classList.add("slider");
@@ -52,6 +56,14 @@ const criaToggle = (nomeDoToggle, eventoDoToggle) => {
 	container.appendChild(label);
 
 	return container;
+}
+
+const ativaOToggle = chaveDoToggle => {
+	const toggle = inputesDoTogglePorChave[chaveDoToggle];
+	toggle.checked = true;
+	console.log("achei o toggle " + toggle);
+	const e = new Event("change");
+	toggle.dispatchEvent(e);
 }
 
 const filtrosPorChave = {
@@ -119,7 +131,7 @@ const mostraImagemGrayScale = (contextoDeRender) => {
 
 
 // ################################################
-// ################### EVENTOS ####################
+// ################# ENTRY POINT ##################
 // ################################################
 
 imgOriginal.onload = () => {
@@ -130,11 +142,22 @@ imgOriginal.onload = () => {
 	
 	mostraOriginal(contextoRenderingEsq);
 	mostraOriginal(contextoRenderingDir);
-};
 
-for (const chave in filtrosPorChave) {
-	const eventoDoToggle = seraQueOUsuarioTogglou => togglar(chave, seraQueOUsuarioTogglou);
+	for (const chave in filtrosPorChave) {
+		const eventoDoToggle = seraQueOUsuarioTogglou => togglar(chave, seraQueOUsuarioTogglou);
+		
+		const toggle = criaToggle(chave, eventoDoToggle);
+		containerDosToggles.appendChild(toggle);
+	}
 	
-	const toggle = criaToggle(chave, eventoDoToggle);
-	containerDosToggles.appendChild(toggle);
-}
+	// for (const chaveDoInput in inputesDoTogglePorChave) {
+	// 	const inpute = inputesDoTogglePorChave[chaveDoInput];
+	// 	inpute.checked = true;
+		
+	// 	const e = new Event("change");
+	// 	inpute.dispatchEvent(e);
+	// }
+
+	ativaOToggle("Imagem Invertida")
+
+};
