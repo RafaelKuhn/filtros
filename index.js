@@ -3,10 +3,41 @@
 // ################################################
 const imgOriginal = new Image();
 imgOriginal.crossOrigin = "anonymous";
-imgOriginal.src = "imgs/venus.jpg";
-// imgOriginal.src = "imgs/clouds.jpg";
-// imgOriginal.src = "imgs/king-adriano.jpg";
-// imgOriginal.src = "imgs/ednaldo.png";
+
+const imagens = [
+	"venus.jpg",
+	"adriano-rei-da-cerveja.jpg",
+	"ednaldo.png",
+	"nuvens-4k.jpg",
+	"flora.png",
+	"grayscale-angel.jpg",
+	"grayscale-esqueleto.jpg",
+	"grayscale-guerra.jpg",
+	"ilusao-de-deriva-periferica.jpg",
+	"Akiyoshi-Kitaoka.png",
+	"noise-blue.jpg",
+	"noise-kurama.jpg",
+	"blur-menino-ney.jpg",
+	"tengu-of-ashina.jpg",
+	"yuv-encoding-jpeg.png",
+];
+
+const select = document.getElementById("imagens");
+for (let index = 0; index < imagens.length; ++index) {
+	const imagem = imagens[index];
+	const el = document.createElement("option");
+	el.value = index;
+	el.textContent = imagem.slice(0, imagem.length - 4);
+	select.appendChild(el)
+}
+
+const atualizaImagem = index => {
+	imgOriginal.src = `imgs/${imagens[index]}`
+}
+
+select.addEventListener("change", () => atualizaImagem(select.value))
+atualizaImagem(0);
+
 
 const canvasEsq = document.getElementById("canvas-esq");
 const canvasDir = document.getElementById("canvas-dir");
@@ -15,24 +46,17 @@ const contextoRenderingDir = canvasDir.getContext("2d");
 
 const containerDosToggles = document.getElementById("container");
 
+
 const inputesDoTogglePorChave = { }
 
-/**
- * @param {Array} array
- * @param {String} elemento
- */
- const removeDoArray = (array, elemento) => {
-	return array.splice(array.indexOf(elemento), 1);
-}
-
-const criaToggle = (nomeDoToggle, eventoDoToggle) => {
+const criaToggle = ({ nomeDoToggle, eventoDoToggle }) => {
 	const container = document.createElement("div");
 	container.classList.add("esse-lixo");
 
 	/** @type {HTMLParagraphElement} */
-	const texto = document.createElement("p");
-	texto.textContent = `${nomeDoToggle}: `;
-	texto.classList.add("texto");
+	const paragrafo = document.createElement("p");
+	paragrafo.textContent = `${nomeDoToggle}`;
+	paragrafo.classList.add("texto");
 
 	const label  = document.createElement("label");
 	label.classList.add("switch");
@@ -40,7 +64,7 @@ const criaToggle = (nomeDoToggle, eventoDoToggle) => {
 	const input = document.createElement("input");
 	input.type = "checkbox";
 	input.classList.add("inputao")
-	input.addEventListener("change", () => eventoDoToggle(input.checked));
+	input.addEventListener("change", () => { console.log("chamando evento do toggle " + input.checked);  eventoDoToggle(input.checked); })
 
 	inputesDoTogglePorChave[nomeDoToggle] = input;
 
@@ -48,17 +72,17 @@ const criaToggle = (nomeDoToggle, eventoDoToggle) => {
 	span.classList.add("slider");
 	span.classList.add("round");
 
-	
 	label.appendChild(input);
 	label.appendChild(span);
 
-	container.appendChild(texto);
 	container.appendChild(label);
+	container.appendChild(paragrafo);
 
 	return container;
 }
 
 const ativaOToggle = chaveDoToggle => {
+	console.log("ativando toggle " + chaveDoToggle);
 	const toggle = inputesDoTogglePorChave[chaveDoToggle];
 	toggle.checked = true;
 	const e = new Event("change");
@@ -66,7 +90,19 @@ const ativaOToggle = chaveDoToggle => {
 }
 
 
+/** @type {String[]} */
 const filtrosParaAplicar = []
+const limpaFiltrosAplicados = () => filtrosParaAplicar.length = 0;
+
+/** @param {String} chave */
+const removeDosFiltrosParaAplicar = chave => {
+	filtrosParaAplicar.splice(filtrosParaAplicar.indexOf(chave), 1);
+}
+
+/** @param {String} chave */
+const adicionaAosFiltrosParaAplicar = chave => {
+	filtrosParaAplicar.push(chave);
+}
 
 const aplicaOsFiltrosParaAplicar = () => {
 	mostraOriginal(contextoRenderingDir);
@@ -78,10 +114,22 @@ const aplicaOsFiltrosParaAplicar = () => {
 }
 
 const togglar = (chave, seraQueOUsuarioTogglou) => {
-	if (seraQueOUsuarioTogglou) filtrosParaAplicar.push(chave);
-	else removeDoArray(filtrosParaAplicar, chave);
-
+	if (seraQueOUsuarioTogglou) adicionaAosFiltrosParaAplicar(chave);
+	else removeDosFiltrosParaAplicar(chave);
+console.log("aplicando filtros");
+console.log(filtrosParaAplicar);
 	aplicaOsFiltrosParaAplicar();
+}
+
+const criaOsToggles = () => {
+	// delete os toggle antigo quando carregar outra imagem
+	containerDosToggles.textContent = "";
+	for (const chave in filtrosPorChave) {
+		const eventoDoToggle = seraQueOUsuarioTogglou => togglar(chave, seraQueOUsuarioTogglou);
+		
+		const toggle = criaToggle({ nomeDoToggle: chave, eventoDoToggle });
+		containerDosToggles.appendChild(toggle);
+	}
 }
 
 
@@ -145,8 +193,6 @@ const mostraImagemBrilho = (contextoDeRender) => {
 }
 
 
-
-
 // ################################################
 // ################# ENTRY POINT ##################
 // ################################################
@@ -154,19 +200,13 @@ const mostraImagemBrilho = (contextoDeRender) => {
 imgOriginal.onload = () => {
 	canvasEsq.width  = canvasDir.width  = imgOriginal.width;
 	canvasEsq.height = canvasDir.height = imgOriginal.height;
-	
-	contextoRenderingEsq.drawImage(imgOriginal, 0, 0);
+	document.getElementById("texto-top").textContent = `w: ${imgOriginal.width}, h: ${imgOriginal.height}`;
 	
 	mostraOriginal(contextoRenderingEsq);
 	mostraOriginal(contextoRenderingDir);
 
-	for (const chave in filtrosPorChave) {
-		const eventoDoToggle = seraQueOUsuarioTogglou => togglar(chave, seraQueOUsuarioTogglou);
-		
-		const toggle = criaToggle(chave, eventoDoToggle);
-		containerDosToggles.appendChild(toggle);
-	}
-	
-	ativaOToggle("Imagem Invertida")
-
+	limpaFiltrosAplicados();
+	criaOsToggles();
 };
+
+window.onload = () => ativaOToggle(Object.keys(filtrosPorChave)[0])

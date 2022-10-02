@@ -2,6 +2,17 @@ body {
 	background-color: aquamarine;
 }
 
+#containerzao {
+	display: flex;
+	justify-content: space-between;
+}
+
+/* #containerDosCanvas { } */
+
+#container {
+	min-width: 200px;
+	margin-right: 5px;
+}
 
 .esse-lixo {
 	display: flex;
@@ -10,7 +21,27 @@ body {
 
 .texto {
 	margin: 0;
+	margin-left: 15px;
 }
+
+canvas {
+	max-width: 49%;
+}
+
+p {
+	margin: 0;
+}
+
+#salvar {
+	float: right;
+	margin-right: 10px;
+}
+
+#texto-top {
+	/* margin-left: 40%; */
+	margin: auto;
+}
+
 
 /* 
 TOGGLE ROUBADO DE
