@@ -38,7 +38,7 @@ const filtrosPorChave = {
 	"Gauss Blur 1x": () => mostraImagemGauss(contextoRenderingDir, 1),
 	"Gauss Blur 2x": () => mostraImagemGauss(contextoRenderingDir, 2),
 	"Gauss Blur 3x": () => mostraImagemGauss(contextoRenderingDir, 3),
-	// "Mediana": () => mostraImagemMediana(contextoRenderingDir),
+	"Median Filter": () => mostraImagemMediana(contextoRenderingDir),
 }
 
 
@@ -243,7 +243,7 @@ const mostraImagemBlurRgb = (contextoDeRender) => {
 			// vermelho
 			glitchRightPx(x, y, data, dataClone, 2);
 			// azul
-			// glitchLeftPx(x+2, y, data, dataClone, 2);
+			glitchLeftPx(x+2, y, data, dataClone, 2);
 		}
 	}
 
@@ -285,6 +285,8 @@ const mostraImagemGauss = (contextoDeRender, vezes) => {
 		const dataClone = imageDataClone.data;
 
 		const lineWidth = canvasDir.width * 4;
+
+
 		const lineWidthMenos1PX = lineWidth - 4;
 
 		for (let y = 1; y < canvasDir.height-1; ++y) {
@@ -300,13 +302,35 @@ const mostraImagemGauss = (contextoDeRender, vezes) => {
 	}
 }
 
+// const medianaDosValores
 
 const aplicaMediana = (x, y, data, dataClone) => {
+	const xy        = coords2Dto1D(x, y);
+	const right     = coords2Dto1D(x+4, y);
+	const left      = coords2Dto1D(x-4, y);
+	const up        = coords2Dto1D(x, y+1);
+	const down      = coords2Dto1D(x, y-1);
+	const upRight   = coords2Dto1D(x+4, y+1);
+	const upLeft    = coords2Dto1D(x-4, y+1);
+	const downLeft  = coords2Dto1D(x-4, y-1);
+	const downRight = coords2Dto1D(x+4, y-1);
 	
+	dataClone[xy] = (
+		1/4 * data[xy] +
+		1/8 * data[right] +
+		1/8 * data[up] +
+		1/8 * data[left] +
+		1/8 * data[down] +
+		1/16 * data[upRight] +
+		1/16 * data[upLeft] +
+		1/16 * data[downLeft] +
+		1/16 * data[downRight]
+	);
 }
 
 /** @param {CanvasRenderingContext2D} contextoDeRender */
 const mostraImagemMediana = (contextoDeRender) => {
+
 	const imageData = contextoDeRender.getImageData(0, 0, canvasEsq.width, canvasEsq.height);
 	const data = imageData.data;
 	const imageDataClone = clonaImageData(imageData);
