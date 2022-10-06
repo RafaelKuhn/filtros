@@ -34,10 +34,11 @@ const filtrosPorChave = {
 	"Grayscale":  () => mostraImagemGrayScale(contextoRenderingDir),
 	"+ Brightness":  () => mostraImagemBrilho(contextoRenderingDir, 100),
 	"- Brightness":  () => mostraImagemBrilho(contextoRenderingDir, -100),
-	"RGB Blur":  () => mostraImagemBlurRgb(contextoRenderingDir),
-	"Gauss Blur 0": () => mostraImagemGauss(contextoRenderingDir),
-	"Gauss Blur 1": () => mostraImagemGauss(contextoRenderingDir),
-	"Gauss Blur 2": () => mostraImagemGauss(contextoRenderingDir),
+	"RGB Glitch":  () => mostraImagemBlurRgb(contextoRenderingDir),
+	"Gauss Blur 1x": () => mostraImagemGauss(contextoRenderingDir, 1),
+	"Gauss Blur 2x": () => mostraImagemGauss(contextoRenderingDir, 2),
+	"Gauss Blur 3x": () => mostraImagemGauss(contextoRenderingDir, 3),
+	// "Mediana": () => mostraImagemMediana(contextoRenderingDir),
 }
 
 
@@ -209,7 +210,6 @@ const mostraImagemBrilho = (contextoDeRender, qtdBrilho) => {
 		data[i]     = data[i]     + qtdBrilho;
 		data[i + 1] = data[i + 1] + qtdBrilho;
 		data[i + 2] = data[i + 2] + qtdBrilho;
-		// data[i + 3] = 255;
 	}
 
 	contextoDeRender.putImageData(imageData, 0, 0);
@@ -276,7 +276,37 @@ const aplicaGauss = (x, y, data, dataClone) => {
 }
 
 /** @param {CanvasRenderingContext2D} contextoDeRender */
-const mostraImagemGauss = (contextoDeRender) => {
+const mostraImagemGauss = (contextoDeRender, vezes) => {
+	for (let i = 0; i < vezes; ++i) {
+
+		const imageData = contextoDeRender.getImageData(0, 0, canvasEsq.width, canvasEsq.height);
+		const data = imageData.data;
+		const imageDataClone = clonaImageData(imageData);
+		const dataClone = imageDataClone.data;
+
+		const lineWidth = canvasDir.width * 4;
+		const lineWidthMenos1PX = lineWidth - 4;
+
+		for (let y = 1; y < canvasDir.height-1; ++y) {
+			for (let x = 4; x < lineWidthMenos1PX; x += 4) {
+				aplicaGauss(x, y, data, dataClone)
+				aplicaGauss(x+1, y, data, dataClone)
+				aplicaGauss(x+2, y, data, dataClone)
+			}
+		}
+
+		contextoDeRender.putImageData(imageDataClone, 0, 0);
+
+	}
+}
+
+
+const aplicaMediana = (x, y, data, dataClone) => {
+	
+}
+
+/** @param {CanvasRenderingContext2D} contextoDeRender */
+const mostraImagemMediana = (contextoDeRender) => {
 	const imageData = contextoDeRender.getImageData(0, 0, canvasEsq.width, canvasEsq.height);
 	const data = imageData.data;
 	const imageDataClone = clonaImageData(imageData);
@@ -287,9 +317,9 @@ const mostraImagemGauss = (contextoDeRender) => {
 
 	for (let y = 1; y < canvasDir.height-1; ++y) {
 		for (let x = 4; x < lineWidthMenos1PX; x += 4) {
-			aplicaGauss(x, y, data, dataClone)
-			aplicaGauss(x+1, y, data, dataClone)
-			aplicaGauss(x+2, y, data, dataClone)
+			aplicaMediana(x, y, data, dataClone)
+			aplicaMediana(x+1, y, data, dataClone)
+			aplicaMediana(x+2, y, data, dataClone)
 		}
 	}
 
