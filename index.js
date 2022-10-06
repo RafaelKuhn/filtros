@@ -1,5 +1,5 @@
 // ################################################
-// ##################### HTML #####################
+// #################### CONFIG ####################
 // ################################################
 const imgOriginal = new Image();
 imgOriginal.crossOrigin = "anonymous";
@@ -22,6 +22,25 @@ const imagens = [
 	"yuv-encoding-jpeg.png",
 ];
 
+const atualizaImagem = index => {
+	imgOriginal.src = `imgs/${imagens[index]}`
+}
+
+atualizaImagem(0);
+
+
+const filtrosPorChave = {
+	"Invert": () => mostraImagemInvertida(contextoRenderingDir),
+	"Grayscale":  () => mostraImagemGrayScale(contextoRenderingDir),
+	"Brightness":  () => mostraImagemBrilho(contextoRenderingDir),
+	"RGB Blur":  () => mostraImagemBlurRgb(contextoRenderingDir),
+}
+
+
+// ################################################
+// ##################### HTML #####################
+// ################################################
+
 const select = document.getElementById("imagens");
 for (let index = 0; index < imagens.length; ++index) {
 	const imagem = imagens[index];
@@ -31,16 +50,12 @@ for (let index = 0; index < imagens.length; ++index) {
 	select.appendChild(el)
 }
 
-const atualizaImagem = index => {
-	imgOriginal.src = `imgs/${imagens[index]}`
-}
-
 select.addEventListener("change", () => atualizaImagem(select.value))
-atualizaImagem(0);
 
-
+/** @type {HTMLCanvasElement} */
 const canvasEsq = document.getElementById("canvas-esq");
 const canvasDir = document.getElementById("canvas-dir");
+/** @type {CanvasRenderingContext2D} */
 const contextoRenderingEsq = canvasEsq.getContext("2d");
 const contextoRenderingDir = canvasDir.getContext("2d");
 
@@ -64,7 +79,7 @@ const criaToggle = ({ nomeDoToggle, eventoDoToggle }) => {
 	const input = document.createElement("input");
 	input.type = "checkbox";
 	input.classList.add("inputao")
-	input.addEventListener("change", () => { console.log("chamando evento do toggle " + input.checked);  eventoDoToggle(input.checked); })
+	input.addEventListener("change", () => eventoDoToggle(input.checked))
 
 	inputesDoTogglePorChave[nomeDoToggle] = input;
 
@@ -82,7 +97,6 @@ const criaToggle = ({ nomeDoToggle, eventoDoToggle }) => {
 }
 
 const ativaOToggle = chaveDoToggle => {
-	console.log("ativando toggle " + chaveDoToggle);
 	const toggle = inputesDoTogglePorChave[chaveDoToggle];
 	toggle.checked = true;
 	const e = new Event("change");
@@ -116,8 +130,6 @@ const aplicaOsFiltrosParaAplicar = () => {
 const togglar = (chave, seraQueOUsuarioTogglou) => {
 	if (seraQueOUsuarioTogglou) adicionaAosFiltrosParaAplicar(chave);
 	else removeDosFiltrosParaAplicar(chave);
-console.log("aplicando filtros");
-console.log(filtrosParaAplicar);
 	aplicaOsFiltrosParaAplicar();
 }
 
@@ -134,19 +146,26 @@ const criaOsToggles = () => {
 
 
 // ################################################
-// ################### FILTROS ####################
+// #################### UTILS #####################
 // ################################################
-
-const filtrosPorChave = {
-	"Imagem Invertida": () => mostraImagemInvertida(contextoRenderingDir),
-	"Escala de Cinza":  () => mostraImagemGrayScale(contextoRenderingDir),
-	"Brilho":  () => mostraImagemBrilho(contextoRenderingDir),
-}
 
 /** @param {CanvasRenderingContext2D} contextoDeRender */
 const mostraOriginal = (contextoDeRender) => {
 	contextoDeRender.drawImage(imgOriginal, 0, 0);
 };
+
+const coords2Dto1D = (x, y) => y * canvasDir.width * 4 + x;
+
+/** @param {ImageData} imageData */
+const clonaImageData = (imageData) => {
+	const data = new Uint8ClampedArray(imageData.data);
+	return new ImageData(data, imageData.width, imageData.height)
+}
+
+
+// ################################################
+// ################### FILTROS ####################
+// ################################################
 
 /** @param {CanvasRenderingContext2D} contextoDeRender */
 const mostraImagemInvertida = (contextoDeRender) => {
@@ -193,6 +212,87 @@ const mostraImagemBrilho = (contextoDeRender) => {
 }
 
 
+const glitchLeftPx = (x, y, data, dataClone, px) => {
+	const coord = coords2Dto1D(x, y);
+	const left      = coords2Dto1D(x - 4*px, y + px)
+	dataClone[coord] = data[left];
+}
+
+const glitchRightPx = (x, y, data, dataClone, px) => {
+	const coord = coords2Dto1D(x, y);
+	const right      = coords2Dto1D(x + 4*px, y - px)
+	dataClone[coord] = data[right];
+}
+
+/** @param {CanvasRenderingContext2D} contextoDeRender */
+const mostraImagemBlurRgb = (contextoDeRender) => {
+	const imageData = contextoDeRender.getImageData(0, 0, canvasEsq.width, canvasEsq.height);
+	const data = imageData.data;
+	const imageDataClone = clonaImageData(imageData);
+	const dataClone = imageDataClone.data;
+
+	const lineWidth = canvasDir.width * 4;
+	const lineWidthMenos1PX = lineWidth - 4;
+
+	for (let y = 1; y < canvasDir.height-1; ++y) {
+		for (let x = 4; x < lineWidthMenos1PX; x += 4) {
+			// vermelho
+			glitchRightPx(x, y, data, dataClone, 2);
+			// azul
+			// glitchLeftPx(x+2, y, data, dataClone, 2);
+		}
+	}
+
+	contextoDeRender.putImageData(imageDataClone, 0, 0);
+}
+
+
+const aplicaGauss = (x, y, data, dataClone) => {
+	const right     = coords2Dto1D(x+4, y)
+	const left      = coords2Dto1D(x-4, y)
+	const up        = coords2Dto1D(x, y+4)
+	const down      = coords2Dto1D(x, y-4)
+	const upRight   = coords2Dto1D(x+4, y+4)
+	const upLeft    = coords2Dto1D(x-4, y+4)
+	const downLeft  = coords2Dto1D(x-4, y-4)
+	const downRight = coords2Dto1D(x+4, y-4)
+	
+	dataClone[coord] = (
+		1/4 * data[coord] +
+		1/8 * data[right] +
+		1/8 * data[up] +
+		1/8 * data[left] +
+		1/8 * data[down] +
+		1/16 * data[upRight] +
+		1/16 * data[upLeft] +
+		1/16 * data[downLeft] +
+		1/16 * data[downRight]
+	);
+}
+
+/** @param {CanvasRenderingContext2D} contextoDeRender */
+const mostraImagemGauss = (contextoDeRender) => {
+	const imageData = contextoDeRender.getImageData(0, 0, canvasEsq.width, canvasEsq.height);
+	const data = imageData.data;
+	const imageDataClone = clonaImageData(imageData);
+	const dataClone = imageDataClone.data;
+
+	const lineWidth = canvasDir.width * 4;
+	const lineWidthMenos1PX = lineWidth - 4;
+
+	for (let y = 1; y < canvasDir.height-1; ++y) {
+		for (let x = 4; x < lineWidthMenos1PX; x += 4) {
+
+			aplicaGauss(x, y, data, dataClone)
+			aplicaGauss(x+1, y, data, dataClone)
+			aplicaGauss(x+2, y, data, dataClone)
+		}
+	}
+
+	contextoDeRender.putImageData(imageDataClone, 0, 0);
+}
+
+
 // ################################################
 // ################# ENTRY POINT ##################
 // ################################################
@@ -209,4 +309,6 @@ imgOriginal.onload = () => {
 	criaOsToggles();
 };
 
-window.onload = () => ativaOToggle(Object.keys(filtrosPorChave)[0])
+window.onload = () => {
+	ativaOToggle(Object.keys(filtrosPorChave)[0])
+}
