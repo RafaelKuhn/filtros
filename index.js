@@ -13,12 +13,13 @@ const imagens = [
 	"grayscale-angel.jpg",
 	"grayscale-esqueleto.jpg",
 	"grayscale-guerra.jpg",
+	"tengu-of-ashina.jpg",
 	"ilusao-de-deriva-periferica.jpg",
 	"Akiyoshi-Kitaoka.png",
 	"noise-blue.jpg",
 	"noise-kurama.jpg",
 	"blur-menino-ney.jpg",
-	"tengu-of-ashina.jpg",
+	"blur-emma-gentle-blade.jpg",
 	"yuv-encoding-jpeg.png",
 ];
 
