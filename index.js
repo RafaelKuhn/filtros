@@ -32,9 +32,12 @@ atualizaImagem(0);
 const filtrosPorChave = {
 	"Invert": () => mostraImagemInvertida(contextoRenderingDir),
 	"Grayscale":  () => mostraImagemGrayScale(contextoRenderingDir),
-	"Brightness":  () => mostraImagemBrilho(contextoRenderingDir),
+	"+ Brightness":  () => mostraImagemBrilho(contextoRenderingDir, 100),
+	"- Brightness":  () => mostraImagemBrilho(contextoRenderingDir, -100),
 	"RGB Blur":  () => mostraImagemBlurRgb(contextoRenderingDir),
-	"Gauss Blur": () => mostraImagemGauss(contextoRenderingDir),
+	"Gauss Blur 0": () => mostraImagemGauss(contextoRenderingDir),
+	"Gauss Blur 1": () => mostraImagemGauss(contextoRenderingDir),
+	"Gauss Blur 2": () => mostraImagemGauss(contextoRenderingDir),
 }
 
 
@@ -198,14 +201,14 @@ const mostraImagemGrayScale = (contextoDeRender) => {
 }
 
 /** @param {CanvasRenderingContext2D} contextoDeRender */
-const mostraImagemBrilho = (contextoDeRender) => {
+const mostraImagemBrilho = (contextoDeRender, qtdBrilho) => {
 	const imageData = contextoDeRender.getImageData(0, 0, canvasEsq.width, canvasEsq.height);
 	const data = imageData.data;
 
 	for (let i = 0; i < data.length; i += 4) {
-		data[i]     = data[i] + 100;
-		data[i + 1] = data[i + 1] + 100;
-		data[i + 2] = data[i + 2] + 100;
+		data[i]     = data[i]     + qtdBrilho;
+		data[i + 1] = data[i + 1] + qtdBrilho;
+		data[i + 2] = data[i + 2] + qtdBrilho;
 		// data[i + 3] = 255;
 	}
 
