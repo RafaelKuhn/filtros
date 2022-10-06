@@ -34,6 +34,7 @@ const filtrosPorChave = {
 	"Grayscale":  () => mostraImagemGrayScale(contextoRenderingDir),
 	"Brightness":  () => mostraImagemBrilho(contextoRenderingDir),
 	"RGB Blur":  () => mostraImagemBlurRgb(contextoRenderingDir),
+	"Gauss Blur": () => mostraImagemGauss(contextoRenderingDir),
 }
 
 
@@ -248,17 +249,18 @@ const mostraImagemBlurRgb = (contextoDeRender) => {
 
 
 const aplicaGauss = (x, y, data, dataClone) => {
-	const right     = coords2Dto1D(x+4, y)
-	const left      = coords2Dto1D(x-4, y)
-	const up        = coords2Dto1D(x, y+4)
-	const down      = coords2Dto1D(x, y-4)
-	const upRight   = coords2Dto1D(x+4, y+4)
-	const upLeft    = coords2Dto1D(x-4, y+4)
-	const downLeft  = coords2Dto1D(x-4, y-4)
-	const downRight = coords2Dto1D(x+4, y-4)
+	const xy        = coords2Dto1D(x, y);
+	const right     = coords2Dto1D(x+4, y);
+	const left      = coords2Dto1D(x-4, y);
+	const up        = coords2Dto1D(x, y+1);
+	const down      = coords2Dto1D(x, y-1);
+	const upRight   = coords2Dto1D(x+4, y+1);
+	const upLeft    = coords2Dto1D(x-4, y+1);
+	const downLeft  = coords2Dto1D(x-4, y-1);
+	const downRight = coords2Dto1D(x+4, y-1);
 	
-	dataClone[coord] = (
-		1/4 * data[coord] +
+	dataClone[xy] = (
+		1/4 * data[xy] +
 		1/8 * data[right] +
 		1/8 * data[up] +
 		1/8 * data[left] +
@@ -282,7 +284,6 @@ const mostraImagemGauss = (contextoDeRender) => {
 
 	for (let y = 1; y < canvasDir.height-1; ++y) {
 		for (let x = 4; x < lineWidthMenos1PX; x += 4) {
-
 			aplicaGauss(x, y, data, dataClone)
 			aplicaGauss(x+1, y, data, dataClone)
 			aplicaGauss(x+2, y, data, dataClone)
