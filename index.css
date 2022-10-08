@@ -32,14 +32,21 @@ p {
 	margin: 0;
 }
 
-#salvar {
-	float: right;
-	margin-right: 10px;
-}
-
 #texto-top {
 	/* margin-left: 40%; */
 	margin: auto;
+}
+
+.flex:first-of-type {
+	margin-bottom: 5px;
+}
+.flex {
+	display: flex;
+	justify-content: space-between;
+}
+
+.direita {
+	margin-right: 10px;
 }
 
 

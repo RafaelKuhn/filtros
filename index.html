@@ -18,11 +18,18 @@
 				<canvas id="canvas-dir"></canvas>
 				
 				<br>
-				<input id="abrir" type="button" value="Subir Imagem" />
-				<input id="salvar" type="button" value="Salvar Imagem" />
+				<div class="flex">
+					<span>Upload Image</span>
+					<input class="direita" id="salvar" type="button" value="Save Image" />
+					<!-- <span class="direita">File Name: <input id="nome-arquivo" type="text" value="download"></span> -->
+				</div>
+
+				<div class="flex">
+					<input id="abrir"  type="file" />
+				</div>
 				
 				<br><br><br><br>
-				<p>Imagem default:</p>
+				<p>Use Default Image:</p>
 				<select name="imagens" id="imagens"></select> 
 			</div>
 			

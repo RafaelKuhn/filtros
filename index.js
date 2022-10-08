@@ -4,7 +4,7 @@
 const imgOriginal = new Image();
 imgOriginal.crossOrigin = "anonymous";
 
-const imagens = [
+const imagensDefault = [
 	"venus.jpg",
 	"adriano-rei-da-cerveja.jpg",
 	"ednaldo.png",
@@ -23,12 +23,19 @@ const imagens = [
 	"yuv-encoding-jpeg.png",
 ];
 
-const atualizaImagem = index => {
-	imgOriginal.src = `imgs/${imagens[index]}`
+let nomeDaImagem = "default.png";
+const atualizaImagem = (imagemBase64, nome) => {
+	imgOriginal.src = imagemBase64;
+	nomeDaImagem = nome;
 }
 
-atualizaImagem(0);
+const atualizaImagemParaDefault = index => {
+	const nome = imagensDefault[index];
+	imgOriginal.src = `imgs/${nome}`;
+	nomeDaImagem = nome;
+}
 
+atualizaImagemParaDefault(0);
 
 const filtrosPorChave = {
 	"Invert": () => mostraImagemInvertida(contextoRenderingDir),
@@ -39,7 +46,7 @@ const filtrosPorChave = {
 	"Gauss Blur 1x": () => mostraImagemGauss(contextoRenderingDir, 1),
 	"Gauss Blur 2x": () => mostraImagemGauss(contextoRenderingDir, 2),
 	"Gauss Blur 3x": () => mostraImagemGauss(contextoRenderingDir, 3),
-	"Median Filter": () => mostraImagemMediana(contextoRenderingDir),
+	// "Median Filter": () => mostraImagemMediana(contextoRenderingDir),
 }
 
 
@@ -47,26 +54,49 @@ const filtrosPorChave = {
 // ##################### HTML #####################
 // ################################################
 
+/** @type {HTMLInputElement} */
+const inputSubirImagem = document.getElementById("abrir");
+inputSubirImagem.onchange = eventoDeChange => {
+	const reader = new FileReader();
+	const nomeImagem = inputSubirImagem.files.item(0).name;
+	reader.onload = eventoDeLoad => atualizaImagem(eventoDeLoad.target.result, nomeImagem);
+
+	reader.readAsDataURL(eventoDeChange.target.files[0]);
+}
+
+/** @type {HTMLInputElement} */
+const botaoSalvar = document.getElementById("salvar");
+botaoSalvar.onclick = () => {
+	/** @type {HTMLAnchorElement} */
+	const link = document.createElement('a');
+	
+	link.download = nomeDaImagem;
+	link.href = canvasDir.toDataURL();
+	link.click();
+}
+
+/** @type {HTMLSelectElement} */
 const select = document.getElementById("imagens");
-for (let index = 0; index < imagens.length; ++index) {
-	const imagem = imagens[index];
+for (let index = 0; index < imagensDefault.length; ++index) {
+	const imagem = imagensDefault[index];
 	const el = document.createElement("option");
 	el.value = index;
 	el.textContent = imagem.slice(0, imagem.length - 4);
 	select.appendChild(el)
 }
 
-select.addEventListener("change", () => atualizaImagem(select.value))
+select.addEventListener("change", () => atualizaImagemParaDefault(select.value))
 
 /** @type {HTMLCanvasElement} */
 const canvasEsq = document.getElementById("canvas-esq");
+/** @type {HTMLCanvasElement} */
 const canvasDir = document.getElementById("canvas-dir");
 /** @type {CanvasRenderingContext2D} */
 const contextoRenderingEsq = canvasEsq.getContext("2d");
 const contextoRenderingDir = canvasDir.getContext("2d");
 
+/** @type {HTMLDivElement} */
 const containerDosToggles = document.getElementById("container");
-
 
 const inputesDoTogglePorChave = { }
 
