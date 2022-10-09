@@ -18,6 +18,7 @@ const imagensDefault = [
 	"noise-balloons.png",
 	"blur-menino-ney.jpg",
 	"yuv-encoding-jpeg.png",
+	"colors.jpg",
 ];
 
 let nomeDaImagem = "default.png";
