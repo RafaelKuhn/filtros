@@ -11,15 +11,11 @@ const imagensDefault = [
 	"nuvens-4k.jpg",
 	"flora.png",
 	"grayscale-angel.jpg",
-	"grayscale-esqueleto.jpg",
-	"grayscale-guerra.jpg",
 	"tengu-of-ashina.jpg",
 	"ilusao-de-deriva-periferica.jpg",
-	"Akiyoshi-Kitaoka.png",
-	"noise-blue.jpg",
-	"noise-kurama.jpg",
+	"noise-girl.png",
+	"noise-balloons.png",
 	"blur-menino-ney.jpg",
-	"blur-emma-gentle-blade.jpg",
 	"yuv-encoding-jpeg.png",
 ];
 
@@ -39,14 +35,17 @@ atualizaImagemParaDefault(0);
 
 const filtrosPorChave = {
 	"Invert": () => mostraImagemInvertida(contextoRenderingDir),
-	"Grayscale":  () => mostraImagemGrayScale(contextoRenderingDir),
+	"RGB Glitch":  () => mostraImagemRgbGlitch(contextoRenderingDir),
+	"Grayscale Rec 601":  () => mostraImagemGrayScale(contextoRenderingDir, 0.2989, 0.5870, 0.1140),
+	"Grayscale Rec 709":  () => mostraImagemGrayScale(contextoRenderingDir, 0.2126, 0.7152, 0.0722),
 	"+ Brightness":  () => mostraImagemBrilho(contextoRenderingDir, 100),
 	"- Brightness":  () => mostraImagemBrilho(contextoRenderingDir, -100),
-	"RGB Glitch":  () => mostraImagemBlurRgb(contextoRenderingDir),
-	"Gauss Blur 1x": () => mostraImagemGauss(contextoRenderingDir, 1),
-	"Gauss Blur 2x": () => mostraImagemGauss(contextoRenderingDir, 2),
-	"Gauss Blur 3x": () => mostraImagemGauss(contextoRenderingDir, 3),
-	// "Median Filter": () => mostraImagemMediana(contextoRenderingDir),
+	"Gaussian Blur 1x": () => mostraImagemGauss(contextoRenderingDir, 1),
+	"Gaussian Blur 2x": () => mostraImagemGauss(contextoRenderingDir, 2),
+	"Gaussian Blur 3x": () => mostraImagemGauss(contextoRenderingDir, 3),
+	"Median Filter 1x": () => mostraImagemMediana(contextoRenderingDir, insertionSort, 1),
+	"Median Filter 2x": () => mostraImagemMediana(contextoRenderingDir, insertionSort, 2),
+	"Median Filter 3x": () => mostraImagemMediana(contextoRenderingDir, insertionSort, 3),
 }
 
 
@@ -85,7 +84,10 @@ for (let index = 0; index < imagensDefault.length; ++index) {
 	select.appendChild(el)
 }
 
-select.addEventListener("change", () => atualizaImagemParaDefault(select.value))
+select.addEventListener("change", () => {
+	inputSubirImagem.value = "";
+	atualizaImagemParaDefault(select.value)
+});
 
 /** @type {HTMLCanvasElement} */
 const canvasEsq = document.getElementById("canvas-esq");
@@ -140,7 +142,7 @@ const ativaOToggle = chaveDoToggle => {
 }
 
 
-/** @type {String[]} */
+/** @type {Array<String>} */
 const filtrosParaAplicar = []
 const limpaFiltrosAplicados = () => filtrosParaAplicar.length = 0;
 
@@ -154,8 +156,9 @@ const adicionaAosFiltrosParaAplicar = chave => {
 	filtrosParaAplicar.push(chave);
 }
 
-const aplicaOsFiltrosParaAplicar = () => {
+const aplicaTodosOsFiltrosParaAplicar = () => {
 	mostraOriginal(contextoRenderingDir);
+	// mostraOriginal(contextoRenderingEsq); // não mexemos no canvas da esquerda
 
 	for (const chaveFiltro of filtrosParaAplicar) {
 		const aplicaFiltro = filtrosPorChave[chaveFiltro];
@@ -164,9 +167,16 @@ const aplicaOsFiltrosParaAplicar = () => {
 }
 
 const togglar = (chave, seraQueOUsuarioTogglou) => {
-	if (seraQueOUsuarioTogglou) adicionaAosFiltrosParaAplicar(chave);
-	else removeDosFiltrosParaAplicar(chave);
-	aplicaOsFiltrosParaAplicar();
+	if (seraQueOUsuarioTogglou) {
+		adicionaAosFiltrosParaAplicar(chave);
+		const aplicaFiltro = filtrosPorChave[chave];
+		aplicaFiltro(contextoRenderingDir);
+	}
+	
+	else {
+		removeDosFiltrosParaAplicar(chave);
+		aplicaTodosOsFiltrosParaAplicar();
+	}
 }
 
 const criaOsToggles = () => {
@@ -184,6 +194,13 @@ const criaOsToggles = () => {
 // ################################################
 // #################### UTILS #####################
 // ################################################
+
+/** @param {Array} arr */
+const logaArray = arr => {
+	let agr = "";
+	arr.forEach(el => agr += `${el} `);
+	console.log(agr);
+}
 
 /** @param {CanvasRenderingContext2D} contextoDeRender */
 const mostraOriginal = (contextoDeRender) => {
@@ -218,12 +235,12 @@ const mostraImagemInvertida = (contextoDeRender) => {
 }
 
 /** @param {CanvasRenderingContext2D} contextoDeRender */
-const mostraImagemGrayScale = (contextoDeRender) => {
+const mostraImagemGrayScale = (contextoDeRender, rcoef, gcoef, bcoef) => {
 	const imageData = contextoDeRender.getImageData(0, 0, canvasEsq.width, canvasEsq.height);
 	const data = imageData.data;
 
 	for (let i = 0; i < data.length; i += 4) {
-		const misturaRgb = 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
+		const misturaRgb = rcoef  * data[i] + gcoef * data[i + 1] + bcoef * data[i + 2];
 		data[i]     = misturaRgb;
 		data[i + 1] = misturaRgb;
 		data[i + 2] = misturaRgb;
@@ -260,7 +277,7 @@ const glitchRightPx = (x, y, data, dataClone, px) => {
 }
 
 /** @param {CanvasRenderingContext2D} contextoDeRender */
-const mostraImagemBlurRgb = (contextoDeRender) => {
+const mostraImagemRgbGlitch = (contextoDeRender) => {
 	const imageData = contextoDeRender.getImageData(0, 0, canvasEsq.width, canvasEsq.height);
 	const data = imageData.data;
 	const imageDataClone = clonaImageData(imageData);
@@ -283,26 +300,18 @@ const mostraImagemBlurRgb = (contextoDeRender) => {
 
 
 const aplicaGauss = (x, y, data, dataClone) => {
-	const xy        = coords2Dto1D(x, y);
-	const right     = coords2Dto1D(x+4, y);
-	const left      = coords2Dto1D(x-4, y);
-	const up        = coords2Dto1D(x, y+1);
-	const down      = coords2Dto1D(x, y-1);
-	const upRight   = coords2Dto1D(x+4, y+1);
-	const upLeft    = coords2Dto1D(x-4, y+1);
-	const downLeft  = coords2Dto1D(x-4, y-1);
-	const downRight = coords2Dto1D(x+4, y-1);
+	const xy = coords2Dto1D(x, y);
 	
 	dataClone[xy] = (
-		1/4 * data[xy] +
-		1/8 * data[right] +
-		1/8 * data[up] +
-		1/8 * data[left] +
-		1/8 * data[down] +
-		1/16 * data[upRight] +
-		1/16 * data[upLeft] +
-		1/16 * data[downLeft] +
-		1/16 * data[downRight]
+		1/4  * data[xy] +
+		1/8  * data[coords2Dto1D(x+4, y)] +   // right
+		1/8  * data[coords2Dto1D(x-4, y)] +   // left
+		1/8  * data[coords2Dto1D(x, y+1)] +   // up
+		1/8  * data[coords2Dto1D(x, y-1)] +   // down
+		1/16 * data[coords2Dto1D(x+4, y+1)] + // upRight
+		1/16 * data[coords2Dto1D(x-4, y+1)] + // upLeft
+		1/16 * data[coords2Dto1D(x-4, y-1)] + // downLeft
+		1/16 * data[coords2Dto1D(x+4, y-1)]   // downRight
 	);
 }
 
@@ -333,52 +342,141 @@ const mostraImagemGauss = (contextoDeRender, vezes) => {
 	}
 }
 
-// const medianaDosValores
 
-const aplicaMediana = (x, y, data, dataClone) => {
-	const xy        = coords2Dto1D(x, y);
-	const right     = coords2Dto1D(x+4, y);
-	const left      = coords2Dto1D(x-4, y);
-	const up        = coords2Dto1D(x, y+1);
-	const down      = coords2Dto1D(x, y-1);
-	const upRight   = coords2Dto1D(x+4, y+1);
-	const upLeft    = coords2Dto1D(x-4, y+1);
-	const downLeft  = coords2Dto1D(x-4, y-1);
-	const downRight = coords2Dto1D(x+4, y-1);
+const aplicaMediana = (x, y, data, dataClone, algoritmoDeOrdenacao) => {
+	const xy = coords2Dto1D(x, y);
 	
-	dataClone[xy] = (
-		1/4 * data[xy] +
-		1/8 * data[right] +
-		1/8 * data[up] +
-		1/8 * data[left] +
-		1/8 * data[down] +
-		1/16 * data[upRight] +
-		1/16 * data[upLeft] +
-		1/16 * data[downLeft] +
-		1/16 * data[downRight]
-	);
+	const matrix = [
+		data[xy],
+		data[coords2Dto1D(x+4, y)],   // right
+		data[coords2Dto1D(x-4, y)],   // left
+		data[coords2Dto1D(x, y+1)],   // up
+		data[coords2Dto1D(x, y-1)],   // down
+		data[coords2Dto1D(x+4, y+1)], // upRight
+		data[coords2Dto1D(x-4, y+1)], // upLeft
+		data[coords2Dto1D(x-4, y-1)], // downLeft
+		data[coords2Dto1D(x+4, y-1)], // downRight
+	]
+	
+	const matrizOrdenada = algoritmoDeOrdenacao(matrix);
+
+	const median = matrizOrdenada[4]
+	dataClone[xy] = median;
 }
 
 /** @param {CanvasRenderingContext2D} contextoDeRender */
-const mostraImagemMediana = (contextoDeRender) => {
+const mostraImagemMediana = (contextoDeRender, algoritmoDeOrdenacao, vezes) => {
+	for (let i = 0; i < vezes; ++i) {
+		
+		const imageData = contextoDeRender.getImageData(0, 0, canvasEsq.width, canvasEsq.height);
+		const data = imageData.data;
+		const imageDataClone = clonaImageData(imageData);
+		const dataClone = imageDataClone.data;
 
-	const imageData = contextoDeRender.getImageData(0, 0, canvasEsq.width, canvasEsq.height);
-	const data = imageData.data;
-	const imageDataClone = clonaImageData(imageData);
-	const dataClone = imageDataClone.data;
+		const lineWidth = canvasDir.width * 4;
+		const lineWidthMenos1PX = lineWidth - 4;
+		
+		for (let y = 1; y < canvasDir.height-1; ++y) {
+			for (let x = 4; x < lineWidthMenos1PX; x += 4) {
+				aplicaMediana(x, y, data, dataClone, algoritmoDeOrdenacao)
+				aplicaMediana(x+1, y, data, dataClone, algoritmoDeOrdenacao)
+				aplicaMediana(x+2, y, data, dataClone, algoritmoDeOrdenacao)
+			}
+		}
+		
+		contextoDeRender.putImageData(imageDataClone, 0, 0);		
+	}
+}
 
-	const lineWidth = canvasDir.width * 4;
-	const lineWidthMenos1PX = lineWidth - 4;
 
-	for (let y = 1; y < canvasDir.height-1; ++y) {
-		for (let x = 4; x < lineWidthMenos1PX; x += 4) {
-			aplicaMediana(x, y, data, dataClone)
-			aplicaMediana(x+1, y, data, dataClone)
-			aplicaMediana(x+2, y, data, dataClone)
+// ################################################
+// ############# ALGORITMOS ORDENAÇÃO #############
+// ################################################
+
+// quick sort
+const particionaQs = (arr, iEsq, iDir) => {
+	const pivot = arr[Math.floor( (iDir + iEsq) * 0.5 )];
+	while (iEsq <= iDir) {
+		while (arr[iEsq] < pivot) iEsq++;
+		while (arr[iDir] > pivot) iDir--;
+		
+		if (iEsq <= iDir) {
+			// swap(i, j);
+			const temp = arr[iEsq];
+			arr[iEsq] = arr[iDir];
+			arr[iDir] = temp;
+			
+			iEsq++;
+			iDir--;
 		}
 	}
 
-	contextoDeRender.putImageData(imageDataClone, 0, 0);
+	return iEsq;
+}
+
+const quickSort = (arr, iEsq, iDir) => {
+	const index = particionaQs(arr, iEsq, iDir);
+	
+	// mais elementos à esquerda do pivot
+	if (iEsq < index - 1) {
+		quickSort(arr, iEsq, index - 1);
+	}
+	
+	// mais elementos à direita do pivot
+	if (index < iDir) {
+		quickSort(arr, index, iDir);
+	}
+
+	return arr;
+}
+
+// insertion sort
+const insertionSort = (arr) => {
+	for (let i = 1; i < arr.length; ++i) {
+		const atual = arr[i];
+		
+		let j = i - 1; 
+		while ( (j > -1) && (atual < arr[j]) ) {
+				arr[j + 1] = arr[j];
+				j--;
+		}
+		arr[j + 1] = atual;
+	}
+	
+	return arr;
+}
+
+// counting sort
+const countingArray = [];
+countingArray.length = 256;
+const limpaCountingArray = () => {
+	for (let i = 0; i < countingArray.length; ++i)
+		countingArray[i] = 0;
+}
+
+const countingSort = arr => {
+	limpaCountingArray();
+	const qtdElementos = arr.length
+	const auxArray = [];
+	auxArray.length = arr.length;
+	
+	// popula array de indices e inicializa aux com 0s
+	for (let i = 0; i < qtdElementos; ++i) {
+		auxArray[i] = 0;
+		++countingArray[arr[i]];
+	}
+	
+	// computa a "running sum"
+	for (let i = 1; i < countingArray.length; ++i)
+		countingArray[i] = countingArray[i-1] + countingArray[i];
+	
+	// põe os valores de arr na posição que runningSum[arr[i]] - 1 indica
+	for (let i = 0; i < qtdElementos; ++i) {
+		const valorAtual = arr[i];
+		auxArray[--countingArray[valorAtual]] = valorAtual;
+	}
+	
+	return auxArray;
 }
 
 
@@ -401,3 +499,10 @@ imgOriginal.onload = () => {
 window.onload = () => {
 	ativaOToggle(Object.keys(filtrosPorChave)[0])
 }
+
+
+
+
+
+
+
