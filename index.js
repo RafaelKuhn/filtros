@@ -9,8 +9,8 @@ const imagensDefault = [
 	"adriano-rei-da-cerveja.jpg",
 	"coveiro-pensando.png",
 	"ednaldo.png",
-	"nuvens-4k.jpg",
 	"flora.png",
+	"nuvens-4k.jpg",
 	"grayscale-angel.jpg",
 	"tengu-of-ashina.jpg",
 	"ilusao-de-deriva-periferica.jpg",
@@ -47,6 +47,7 @@ const filtrosPorChave = {
 	"Median Filter 1x": () => mostraImagemMediana(contextoRenderingDir, insertionSort, 1),
 	"Median Filter 2x": () => mostraImagemMediana(contextoRenderingDir, insertionSort, 2),
 	"Median Filter 3x": () => mostraImagemMediana(contextoRenderingDir, insertionSort, 3),
+	"Sobel": () => mostraImagemSobel(contextoRenderingDir),
 }
 
 
@@ -196,6 +197,9 @@ const criaOsToggles = () => {
 // #################### UTILS #####################
 // ################################################
 
+const Tau     = 6.28318530;
+const HalfTau = 3.14159265;
+
 /** @param {Array} arr */
 const logaArray = arr => {
 	let agr = "";
@@ -326,8 +330,6 @@ const mostraImagemGauss = (contextoDeRender, vezes) => {
 		const dataClone = imageDataClone.data;
 
 		const lineWidth = canvasDir.width * 4;
-
-
 		const lineWidthMenos1PX = lineWidth - 4;
 
 		for (let y = 1; y < canvasDir.height-1; ++y) {
@@ -385,8 +387,58 @@ const mostraImagemMediana = (contextoDeRender, algoritmoDeOrdenacao, vezes) => {
 			}
 		}
 		
-		contextoDeRender.putImageData(imageDataClone, 0, 0);		
+		contextoDeRender.putImageData(imageDataClone, 0, 0);
+
 	}
+}
+
+
+const aplicaSobel = (x, y, data, dataClone) => {
+	const xy = coords2Dto1D(x, y);
+	
+	const gx = (
+		 2 * data[coords2Dto1D(x+4, y)] +   // right
+		-2 * data[coords2Dto1D(x-4, y)] +   // left
+		 1 * data[coords2Dto1D(x+4, y+1)] + // upRight
+		-1 * data[coords2Dto1D(x-4, y+1)] + // upLeft
+		 1 * data[coords2Dto1D(x+4, y-1)] + // downRight
+		-1 * data[coords2Dto1D(x-4, y-1)]   // downLeft
+	);
+
+	const gy = (
+		 2 * data[coords2Dto1D(x, y+1)] +   // up
+		-2 * data[coords2Dto1D(x, y-1)] +   // down
+		 1 * data[coords2Dto1D(x+4, y+1)] + // upRight
+		 1 * data[coords2Dto1D(x-4, y+1)] + // upLeft
+		-1 * data[coords2Dto1D(x+4, y-1)] + // downRight
+		-1 * data[coords2Dto1D(x-4, y-1)]   // downLeft
+ 	);
+	
+	const magnitude = Math.sqrt(gy*gy + gx*gx);
+	// const magnitude = Math.abs( Math.abs(gy) + Math.abs(gx) );
+
+	dataClone[xy] = magnitude;
+}
+
+/** @param {CanvasRenderingContext2D} contextoDeRender */
+const mostraImagemSobel = (contextoDeRender) => {
+	const imageData = contextoDeRender.getImageData(0, 0, canvasEsq.width, canvasEsq.height);
+	const data = imageData.data;
+	const imageDataClone = clonaImageData(imageData);
+	const dataClone = imageDataClone.data;
+
+	const lineWidth = canvasDir.width * 4;
+	const lineWidthMenos1PX = lineWidth - 4;
+	
+	for (let y = 1; y < canvasDir.height-1; ++y) {
+		for (let x = 4; x < lineWidthMenos1PX; x += 4) {
+			aplicaSobel(x, y, data, dataClone)
+			aplicaSobel(x+1, y, data, dataClone)
+			aplicaSobel(x+2, y, data, dataClone)
+		}
+	}
+	
+	contextoDeRender.putImageData(imageDataClone, 0, 0);
 }
 
 
