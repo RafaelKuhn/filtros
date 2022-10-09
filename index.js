@@ -7,6 +7,7 @@ imgOriginal.crossOrigin = "anonymous";
 const imagensDefault = [
 	"venus.jpg",
 	"adriano-rei-da-cerveja.jpg",
+	"coveiro-pensando.png",
 	"ednaldo.png",
 	"nuvens-4k.jpg",
 	"flora.png",
