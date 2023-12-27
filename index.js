@@ -38,8 +38,8 @@ atualizaImagemParaDefault(0);
 const filtrosPorChave = {
 	"Invert": () => mostraImagemInvertida(contextoRenderingDir),
 	"RGB Glitch":  () => mostraImagemRgbGlitch(contextoRenderingDir),
-	"Grayscale Rec 601":  () => mostraImagemGrayScale(contextoRenderingDir, 0.2989, 0.5870, 0.1140),
-	"Grayscale Rec 709":  () => mostraImagemGrayScale(contextoRenderingDir, 0.2126, 0.7152, 0.0722),
+	"Grayscale BT.601":  () => mostraImagemGrayScale(contextoRenderingDir, 0.2989, 0.5870, 0.1140),
+	"Grayscale BT.709":  () => mostraImagemGrayScale(contextoRenderingDir, 0.2126, 0.7152, 0.0722),
 	"+ Brightness":  () => mostraImagemBrilho(contextoRenderingDir, 100),
 	"- Brightness":  () => mostraImagemBrilho(contextoRenderingDir, -100),
 	"Gaussian Blur 1x": () => mostraImagemGauss(contextoRenderingDir, 1),
